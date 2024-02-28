@@ -1,0 +1,279 @@
+<app-move-document [docId]="selectedDocId" [docTeamId]="selectedMoveTeamId" *ngIf="moveTeamDialogue"></app-move-document>
+<app-start-new *ngIf="startNewDialogue"></app-start-new>
+<app-share [usersList]="selectedDocUsers" [documentId]="selectedDocId" [documentSlug]="selectedDocSlug" *ngIf="shareDialogue"></app-share>
+
+<div class="content ml-[236px]  transform ease-in-out duration-500 px-2 md:px-12 lg:px-2 pt-24 pb-4 min-h-[90vh] relative">
+    <div class="absolute empty-message" *ngIf="(documents?.length == 0 || !documents) && showEmpty">
+        <img src="assets/document/empty_folder.png" alt="empty" class="responsive-image">
+        <div class="text-[#9196A2] text-2xl font-medium text-center mt-11">This Folder is Empty</div>
+    </div>
+    <div class="flex py-3 justify-between items-center">
+        <div class="flex items-center">
+            <img class="block dark:hidden" src="assets/document/{{breadcrumbIcon}}.svg" alt="">
+            <img class="hidden dark:block" src="assets/document/dark/{{breadcrumbIcon}}.svg" alt="">
+            <div class="text-lg font-medium text-[#192339] dark:text-white ml-2">{{Breadcrumb}}</div>
+        </div>
+        <div class="flex">
+            <button (click)="docListView = !docListView;saveView(docListView)"
+                class="flex justify-center bg-white items-center  p-3  rounded-lg dark:bg-[#23252B] hover:bg-[#f2f2f2] dark:hover:bg-[#383a40]">
+                <img src="assets/dashboardicons/list-view.svg" alt="" *ngIf="!docListView">
+                <img src="assets/dashboardicons/grid-view.svg" alt="" *ngIf="docListView">
+            </button>
+            <button appClickOutside [appClickOutside]="'sortingMenu'" (clickOutside)="closeSortMenu()"
+                class="flex justify-center bg-white dark:bg-[#23252B] hover:bg-[#f2f2f2] dark:hover:bg-[#383a40] items-center py-3 px-2 rounded-lg w-10 mx-5 relative"
+                (click)="sortingMenu = !sortingMenu">
+                <img src="assets/document/sort.svg" alt="sort">
+                <ul [class.active]="cardMenu" id="sortingMenu" #sortingMenu *ngIf="sortingMenu"
+                    class="absolute  py-3 px-2 bg-[white] dark:bg-[#161519] rounded-[10px] opacity-100 z-10 right-0 top-11 options-menu w-max">
+                    <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg mb-1" (click)="sortItems('alphabetical')"
+                        [ngClass]="sortingOption == 'alphabetical' ? 'bg-[#F0F1FF] dark:bg-[#23252B]':''">
+                        <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                            Alphabetical </div>
+                    </li>
+                    <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg mb-1" (click)="sortItems('create')"
+                        [ngClass]="sortingOption == 'create' ? 'bg-[#F0F1FF] dark:bg-[#23252B]':''">
+                        <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                            Recently Created </div>
+                    </li>
+                    <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg mb-1" (click)="sortItems('update')"
+                        [ngClass]="sortingOption == 'update' ? 'bg-[#F0F1FF] dark:bg-[#23252B]':''">
+                        <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                            Recently Updated </div>
+                    </li>
+                    <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg mb-1" (click)="sortItems('view')"
+                        [ngClass]="sortingOption == 'view' ? 'bg-[#F0F1FF] dark:bg-[#23252B]':''">
+                        <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                            View Count </div>
+                    </li>
+
+                </ul>
+            </button>
+            <button *ngIf="browserName=='chrome'" (click)="extensionInstalled?startNewDialogue = true:redirectToChromeStore()" [disabled]="loggedInUserRole?.role?.name=='Viewer'"
+            class="flex justify-center bg-[#5B61F3] hover:bg-[#484DC2] items-center font-medium text-white text-sm py-3 px-8 rounded-lg">{{extensionInstalled
+            ? 'Start New':'Download Extension'}}</button>
+        </div>
+    </div>
+    <div class="flex flex-wrap my-2 -mx-2 " *ngIf="docListView">
+
+        <div class="w-full pl-2 pt-2 pr-2 pb-9" *ngFor="let data of documents;let i = index">
+            <div class="flex w-full rounded-lg px-6 py-4 bg-white dark:bg-[#23252B] items-center justify-between">
+                <div routerLink="/dashboard/editor/{{data?.slug ? data?.slug : data?.id}}" class="flex items-center w-[25%] cursor-pointer">
+                    <div class="flex items-center justify-center bg-white dark:bg-transparent p-2 rounded-full flex-none border-4 w-10 h-10"
+                        [ngClass]="data.icon?'border-none':'border-[#5B51EF]'">
+                        <div *ngIf="!data.icon" class="text-2xl font-semibold text-[#5B51EF]">{{data?.name[0]}}</div>
+                        <img *ngIf="data?.icon"
+                            class="min-w-[28px] max-w-[28px] max-h-[28px] min-h-[28px] transition duration-500"
+                            src="{{data?.icon}}" alt="">
+                    </div>
+                    <div
+                        class="text-base font-normal text-[#192339] dark:text-white ml-3 overflow-hidden whitespace-nowrap text-ellipsis capitalize">
+                        {{data?.name}}
+                    </div>
+                </div>
+                <div class="text-base font-medium text-[#5B61F3] w-[20%] text-center break-words capitalize">
+                    {{data?.document_team?.team?.team_name}}
+                </div>
+                <div class="flex flex-col w-[20%] justify-center">
+                    <div class="text-sm font-normal text-[#192339] dark:text-white break-words capitalize">
+                        By {{
+                        getOwnerName(data?.doument_users)}}
+                    </div>
+                    <div class="text-xs font-normal text-[#9196A2] break-words">
+                        {{data?.created_at
+                        | dateAgo}}
+                    </div>
+                </div>
+                <div class="bg-[#F6F8FF] dark:bg-[#161519] py-2 px-4 rounded-lg flex items-center w-[20%] justify-between">
+                    <div class="text-xs font-medium text-[#FB707F] ">
+                      {{data?.step_count
+                      }} Steps
+                    </div>
+                    <div class="flex ml-4 flex-wrap">
+                        <img src="assets/card-icons/gridView.svg" alt="">
+                        <div class="text-sm text-[#192339] font-normal ml-1 dark:text-white">{{data?.views}}</div>
+                    </div>
+                    <div class="flex ml-4 flex-wrap">
+                        <img src="assets/card-icons/gridReaction.svg" alt="">
+                        <div class="text-sm text-[#192339] font-normal ml-1 dark:text-white">{{data?.reactions?.length}}</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                  <img class="cursor-pointer block dark:hidden" (click)="copyToClipboard(data?.slug ? data?.slug : data?.id)"
+                       src="assets/dashboardicons/link.png"  *ngIf="this.Breadcrumb !== 'Trash'">
+                  <img class="cursor-pointer hidden dark:block" (click)="copyToClipboard(data?.slug ? data?.slug : data?.id)"
+                       src="assets/dashboardicons/dark/link-list.svg"  *ngIf="this.Breadcrumb !== 'Trash'">
+                  <img class="cursor-pointer block dark:hidden" *ngIf="!getFavoriteDoc(data?.favourite_document) && this.Breadcrumb !== 'Trash'"
+                       (click)="addTofavorite(data)" src="assets/dashboardicons/favourite.png">
+                  <img class="cursor-pointer hidden dark:block" *ngIf="!getFavoriteDoc(data?.favourite_document) && this.Breadcrumb !== 'Trash'"
+                       (click)="addTofavorite(data)" src="assets/dashboardicons/dark/fav-list.svg">
+                  <img class="cursor-pointer" *ngIf="getFavoriteDoc(data?.favourite_document) && this.Breadcrumb !== 'Trash'"
+                       (click)="removeFavorite(data)" src="assets/dashboardicons/fav-done.svg">
+                  <div appClickOutside [appClickOutside]="'card'+i" (clickOutside)="closeMenu(i)"
+                       class="dropdown inline-block relative cursor-pointer">
+
+                    <img class="cursor-pointer block dark:hidden" src="assets/dashboardicons/menu_e.png"
+                         alt="options" (click)="cardMenu = !cardMenu;menuIndex=i">
+                    <img class="cursor-pointer hidden dark:block" src="assets/dashboardicons/dark/ellipse-list.svg"
+                         alt="options" (click)="cardMenu = !cardMenu;menuIndex=i">
+                        <ul [class.active]="cardMenu" id="card{{i}}" #card{{i}} *ngIf="cardMenu && menuIndex == i"
+                            class="absolute  py-3 px-2 bg-[white] dark:bg-[#161519] rounded-[10px] opacity-100 z-10 right-0 top-2 options-menu w-max">
+                            <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg"
+                                (click)="cardMenu = false;shareDialogue = !shareDialogue;selectedDocUsers=data?.doument_users;selectedDocId=data?.id;selectedDocSlug=data?.slug;cardMenu = false" *ngIf="this.Breadcrumb !== 'Trash'">
+                                <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                                    Share </div>
+                            </li>
+                            <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg"
+                                (click)="cardMenu = false;selectedMoveTeamId=data?.document_team?.team?.id;moveTeamDialogue = !moveTeamDialogue;selectedDocId=data?.id" *ngIf="(this.Breadcrumb !== 'Trash' && checkPermission(data?.doument_users,permissionsArr[i]?.roleId )) || Breadcrumb == 'Private'">
+                                <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                                    Move to Team </div>
+                            </li>
+                            <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg"
+                                (click)="cardMenu = false;duplicateDocument(data?.id)" *ngIf="(this.Breadcrumb !== 'Trash' && checkPermission(data?.doument_users,permissionsArr[i]?.roleId )) || Breadcrumb == 'Private'">
+                                <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                                    Duplicate </div>
+                            </li>
+                            <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg"
+                                (click)="cardMenu = false;deleteDocuments(i,data?.id,$event)" *ngIf="(this.Breadcrumb !== 'Trash' && checkPermission(data?.doument_users,permissionsArr[i]?.roleId )) || Breadcrumb == 'Private'">
+                                <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                                    Delete </div>
+                            </li>
+                          <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg"
+                                (click)="cardMenu = false;deleteDocumentsPermanently(i,data?.id,$event)" *ngIf="this.Breadcrumb == 'Trash'">
+                                <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                                    Delete Permanently </div>
+                            </li>
+
+                        </ul>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="flex flex-wrap my-2 -mx-2 " *ngIf="!docListView">
+        <!-- <div class="m-auto" *ngIf="(documents?.length == 0 || !documents) && showEmpty">
+            <img src="assets/document/empty_folder.png" alt="empty">
+            <div class="text-[#9196A2] text-2xl font-medium text-center mt-11">This Folder is Empty</div>
+        </div> -->
+        <div class="w-full lg:w-1/3 p-2" *ngFor="let data of documents;let i = index">
+            <div
+                class="flex flex-col justify-around flex-grow w-full rounded-lg p-4 bg-white border border-[#E8EEFA] dark:bg-[#23252B]  dark:border-[#23252B] workflow-card">
+
+                <div class="flex justify-between pb-2 pr-0" >
+                    <span routerLink="/dashboard/editor/{{data?.slug ? data?.slug : data?.id}}"
+                        class="w-[70%] text-base cursor-pointer font-medium text-[#262626] dark:text-white whitespace-nowrap text-ellipsis overflow-hidden">{{data?.name}}</span>
+                  <div class="flex items-center ml-auto space-x-2">
+                    <img class="cursor-pointer block dark:hidden w-4 h-4" (click)="copyToClipboard(data?.slug ? data?.slug : data?.id)"
+                         src="assets/dashboardicons/copy-link.svg"  *ngIf="this.Breadcrumb !== 'Trash'">
+                    <img class="cursor-pointer hidden dark:block w-4 h-4" (click)="copyToClipboard(data?.slug ? data?.slug : data?.id)"
+                         src="assets/dashboardicons/dark/link.svg"  *ngIf="this.Breadcrumb !== 'Trash'">
+                    <img class="cursor-pointer block dark:hidden w-4 h-4" *ngIf="!getFavoriteDoc(data?.favourite_document) && this.Breadcrumb !== 'Trash'"
+                         (click)="addTofavorite(data)" src="assets/dashboardicons/favourite-grid.svg">
+                    <img class="cursor-pointer hidden dark:block w-4 h-4" *ngIf="!getFavoriteDoc(data?.favourite_document) && this.Breadcrumb !== 'Trash'"
+                         (click)="addTofavorite(data)" src="assets/dashboardicons/dark/favourite-grid.svg">
+                    <img class="cursor-pointer w-4 h-4" *ngIf="getFavoriteDoc(data?.favourite_document) && this.Breadcrumb !== 'Trash'"
+                         (click)="removeFavorite(data)"
+                         src="assets/dashboardicons/grid-fav-done.svg">
+                    <div appClickOutside [appClickOutside]="'card'+i" (clickOutside)="closeMenu(i)"
+                         class="dropdown inline-block relative cursor-pointer">
+                      <img class="cursor-pointer block dark:hidden w-4 h-4" src="assets/dashboardicons/card-menu.svg"
+                           alt="options" (click)="cardMenu = !cardMenu;menuIndex=i">
+                      <img class="cursor-pointer hidden dark:block w-4 h-4" src="assets/dashboardicons/dark/ellipse.svg"
+                           alt="options" (click)="cardMenu = !cardMenu;menuIndex=i">
+                      <ul [class.active]="cardMenu" id="card{{i}}" #card{{i}} *ngIf="cardMenu && menuIndex == i"
+                          class="absolute  py-3 px-2 bg-[white] dark:bg-[#161519] rounded-[10px] opacity-100 z-10 right-0 top-4 options-menu w-max">
+                        <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg"
+                            (click)="cardMenu = false;shareDialogue = !shareDialogue;selectedDocUsers=data?.doument_users;selectedDocId=data?.id;selectedDocSlug=data?.slug;cardMenu = false" *ngIf="this.Breadcrumb !== 'Trash'">
+                          <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                            Share </div>
+                        </li>
+                        <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg"
+                            (click)="cardMenu = false;moveTeamDialogue = !moveTeamDialogue;selectedMoveTeamId=data?.document_team?.team?.id;selectedDocId=data?.id;cardMenu = false" *ngIf="(this.Breadcrumb !== 'Trash' && checkPermission(data?.doument_users,permissionsArr[i]?.roleId )) || Breadcrumb == 'Private'">
+                          <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                            Move to Team </div>
+                        </li>
+                        <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg"
+                            (click)="cardMenu = false;duplicateDocument(data?.id);cardMenu = false" *ngIf="(this.Breadcrumb !== 'Trash' && checkPermission(data?.doument_users,permissionsArr[i]?.roleId )) || Breadcrumb == 'Private'">
+                          <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                            Duplicate </div>
+                        </li>
+                        <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg"
+                            (click)="cardMenu = false;deleteDocuments(i,data?.id,$event);cardMenu = false" *ngIf="(this.Breadcrumb !== 'Trash' && checkPermission(data?.doument_users,permissionsArr[i]?.roleId )) || Breadcrumb == 'Private'">
+                          <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                            Delete </div>
+                        </li>
+                        <li class="flex py-3 px-2 hover:bg-[#F0F1FF] hover:dark:bg-[#23252B] rounded-lg"
+                            (click)="cardMenu = false;deleteDocumentsPermanently(i,data?.id,$event);cardMenu = false" *ngIf="this.Breadcrumb == 'Trash'">
+                          <div class="font-medium text-sm whitespace-nowrap text-[#192339] dark:text-white">
+                            Delete Permanently </div>
+                        </li>
+
+                      </ul>
+                    </div>
+                  </div>
+
+                </div>
+                <div routerLink="/dashboard/editor/{{data?.slug ? data?.slug : data?.id}}" class="flex items-center justify-between">
+                    <div
+                        class="font-medium text-lg cursor-pointer text-[#727272] whitespace-nowrap overflow-hidden text-ellipsis">
+                        {{data?.document_team?.team?.team_name}}
+                    </div>
+                    <div
+                        class="flex justify-center items-center bg-white dark:bg-transparent p-2 rounded-full flex-none w-8 h-8 md:w-12 md:h-12 ">
+                        <div *ngIf="!data.icon" class="text-2xl font-semibold text-[#5B51EF]">{{data?.name[0]}}</div>
+
+                        <img *ngIf="data?.icon"
+                            class="min-w-[32px] max-w-[32px] max-h-[32px] min-h-[32px] transition duration-500"
+                            [src]="data?.icon" alt="">
+
+                    </div>
+                </div>
+                <div class="text-xs flex justify-start items-center pt-2" routerLink="/dashboard/editor/{{data?.slug ? data?.slug : data?.id}}">
+                    <div class="flex">
+                        <img src="assets/card-icons/gridView.svg" alt="">
+                        <div class="text-sm text-[#192339] font-normal ml-1 dark:text-white">{{data?.views}}</div>
+                    </div>
+                    <div class="flex ml-4">
+                        <img src="assets/card-icons/gridReaction.svg" alt="">
+                        <div class="text-sm text-[#192339] font-normal ml-1 dark:text-white">{{data?.reactions?.length ?
+                            data?.reactions?.length : 0}}</div>
+                    </div>
+                    <div class=" text-[#FB707F] text-sm font-normal ml-4"> {{data?.step_count
+                      }} Steps
+                    </div>
+                </div>
+                <div class="text-xs flex justify-start items-center pt-4" routerLink="/dashboard/editor/{{data?.slug ? data?.slug : data?.id}}">
+                    <span class=" text-[#727272] text-xs cursor-pointer font-normal">{{data?.created_at
+                        | dateAgo}}</span>
+                    <span
+                        class="text-[#5B51EF] text-xs font-normal cursor-pointer ml-0 lg:ml-2 whitespace-nowrap overflow-hidden text-ellipsis capitalize">{{
+                        getOwnerName(data?.doument_users)}}</span>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+     <div  class="py-5 flex flex-col xs:flex-row items-center xs:justify-between" *ngIf="links?.length > 3">
+        <nav aria-label="Page navigation example">
+          <ul class="inline-flex space-x-2">
+            <li *ngFor="let page of links; let i = index">
+              <button
+                (click)="getQuery(page.url)"
+                *ngIf="page.url != null"
+                [ngClass]="
+                  page.active == true
+                      ? 'pagination-active text-[#5B61F3]'
+                    : 'pagintion-bg dark:text-white'
+                "
+                class="rounded-100 ml-1 py-2 px-4"
+              >
+                <span [innerHTML]="page.label"></span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+</div>
